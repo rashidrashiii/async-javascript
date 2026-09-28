@@ -63,20 +63,42 @@ a { color: var(--accent); }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 /* ---------- Layout ---------- */
-.layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); }
+.layout { display: grid; grid-template-columns: 17rem minmax(0, 1fr); }
 .sidebar {
   position: sticky; top: 0; height: 100vh; overflow-y: auto;
   padding: 2rem 1.25rem; border-right: 1px solid var(--rule);
   display: flex; flex-direction: column; gap: 1.5rem;
 }
-.brand { font: 700 1.2rem/1.2 var(--f-head); color: var(--ink); text-decoration: none; }
+.layout { transition: grid-template-columns .25s ease; }
+.side-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; min-height: 2.25rem; }
+.brand { font: 700 1.2rem/1.2 var(--f-head); color: var(--ink); text-decoration: none; min-width: 0; }
+.collapse-btn {
+  flex: none; display: grid; place-items: center; width: 2.25rem; height: 2.25rem;
+  color: var(--muted); background: transparent; border: 1px solid var(--rule); border-radius: 8px; cursor: pointer;
+}
+.collapse-btn:hover { color: var(--ink); border-color: var(--muted); }
+.collapse-btn .chev { transition: transform .25s ease; transform-origin: 14px 12px; }
+
+/* Collapsed: a slim rail with chapter numbers only */
+.layout.collapsed { grid-template-columns: 4.5rem minmax(0, 1fr); }
+.layout.collapsed .sidebar { padding: 1.25rem .6rem; align-items: center; }
+.layout.collapsed .side-head { justify-content: center; }
+.layout.collapsed .brand,
+.layout.collapsed .tx,
+.layout.collapsed .hint { display: none; }
+.layout.collapsed .collapse-btn .chev { transform: scaleX(-1); }
+.layout.collapsed .toc a { grid-template-columns: 1fr; justify-items: center; padding: .45rem 0; width: 2.6rem; }
+.layout.collapsed .toc a .n { opacity: 1; }
+.layout.collapsed .tools { justify-items: center; }
+.layout.collapsed .size-control { flex-direction: column; }
+.layout.collapsed .github-btn { padding: .55rem; }
 .toc { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
 .toc a {
   display: grid; grid-template-columns: 1.6rem 1fr; align-items: baseline;
   padding: .35rem .5rem; border-radius: 6px;
   color: var(--muted); text-decoration: none; font-size: .95rem; line-height: 1.35;
 }
-.toc a span { font-variant-numeric: tabular-nums; opacity: .7; }
+.toc a .n { font-variant-numeric: tabular-nums; opacity: .7; }
 .toc a:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 6%, transparent); }
 .toc a.active { color: var(--ink); font-weight: 600; background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .tools { margin-top: auto; display: grid; gap: .6rem; font-size: .85rem; color: var(--muted); }
@@ -100,7 +122,7 @@ kbd {
   border: 1px solid var(--rule); background: var(--surface);
 }
 
-main { padding: 3.5rem clamp(1.25rem, 4vw, 4rem) 6rem; max-width: 82rem; min-width: 0; }
+main { padding: 3.5rem clamp(1.25rem, 3.5vw, 4.5rem) 6rem; min-width: 0; width: 100%; max-width: 150rem; }
 
 /* ---------- Hero ---------- */
 .hero { padding-bottom: 3rem; border-bottom: 1px solid var(--rule); }
@@ -150,7 +172,7 @@ th { font-weight: 600; }
 .state { display: inline-flex; align-items: center; gap: .5rem; font-weight: 600; }
 
 /* ---------- Examples ---------- */
-.example { margin: 2rem 0 2.5rem; }
+.example { margin: 2rem 0 2.5rem; container-type: inline-size; }
 .ex-title { font: 700 1.2rem/1.3 var(--f-head); margin: 0 0 .75rem; }
 .ex-grid {
   display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
@@ -158,6 +180,9 @@ th { font-weight: 600; }
   border: 1px solid var(--code-rule);
 }
 .example[data-static] .ex-grid { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1500px) {
+  .ex-grid { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+}
 .pane { display: flex; flex-direction: column; min-width: 0; }
 .out-pane { border-left: 1px solid var(--code-rule); background: var(--out-bg); }
 .pane-bar {
@@ -186,12 +211,14 @@ th { font-weight: 600; }
 @keyframes pulse { 50% { opacity: .35; } }
 
 /* Code editor: a transparent textarea over a highlighted <pre> */
-.editor { overflow-x: auto; flex: 1; }
-.editor-inner { position: relative; min-width: 100%; width: max-content; }
+.editor { flex: 1; min-width: 0; }
+.editor-inner { position: relative; width: 100%; }
 .editor pre, .editor textarea {
   margin: 0; padding: 1rem 1.25rem; border: 0;
   font: 400 var(--code-size, .95rem)/1.65 var(--f-code);
-  tab-size: 2; white-space: pre; letter-spacing: 0; word-spacing: 0;
+  tab-size: 2; letter-spacing: 0; word-spacing: 0;
+  /* Long lines wrap instead of scrolling sideways (pre and textarea wrap identically) */
+  white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal;
 }
 .editor pre { color: var(--code-ink); pointer-events: none; }
 .editor textarea {
@@ -248,24 +275,33 @@ footer { margin-top: 5rem; padding-top: 2rem; border-top: 1px solid var(--rule);
     padding: .6rem 1rem; gap: 1rem; border-right: 0; border-bottom: 1px solid var(--rule);
     background: var(--page);
   }
-  .brand { display: none; }
+  .brand, .collapse-btn { display: none; }
+  .layout.collapsed { grid-template-columns: minmax(0, 1fr); }
+  .layout.collapsed .sidebar { padding: .6rem 1rem; }
+  .layout.collapsed .tx { display: inline; }
+  .layout.collapsed .toc a { width: auto; display: flex; padding: .35rem .5rem; }
+  .layout.collapsed .size-control { flex-direction: row; }
+  .side-head { display: none; }
   .toc { display: flex; overflow-x: auto; gap: .25rem; flex: 1; }
   .toc a { white-space: nowrap; display: flex; gap: .35rem; }
   .tools { margin: 0; }
   .tools .hint { display: none; }
   .sidebar nav { flex: 1; min-width: 0; }
   .tools { display: flex; align-items: center; gap: .5rem; flex: none; }
-  .tools .size-control span { display: none; }
+  .tools .size-control .tx, .layout.collapsed .tools .size-control .tx { display: none; }
   .sidebar .github-btn { padding: .45rem; }
-  .sidebar .github-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .sidebar .github-btn .tx, .layout.collapsed .sidebar .github-btn .tx { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   html { scroll-padding-top: 4.5rem; }
 }
-@media (max-width: 760px) {
+/* Stack code above output when the example itself is too narrow (this also
+   kicks in earlier when the text size is increased, because it's measured in rem) */
+@container (max-width: 56rem) {
   .ex-grid { grid-template-columns: minmax(0, 1fr); }
   .out-pane { border-left: 0; border-top: 1px solid var(--code-rule); }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .layout, .collapse-btn .chev { transition: none; }
   .is-running .dot, .line { animation: none; }
 }
 </style>
@@ -273,27 +309,32 @@ footer { margin-top: 5rem; padding-top: 2rem; border-top: 1px solid var(--rule);
 <body>
 <div class="layout">
 
-<aside class="sidebar">
-  <a class="brand" href="#top">Async JavaScript</a>
+<aside class="sidebar" id="sidebar">
+  <div class="side-head">
+    <a class="brand" href="#top">Async JavaScript</a>
+    <button type="button" class="collapse-btn" aria-expanded="true" aria-controls="sidebar" aria-label="Collapse sidebar" title="Collapse sidebar">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/><path class="chev" d="M15 10l-2 2 2 2"/></svg>
+    </button>
+  </div>
   <nav aria-label="Chapters">
     <ol class="toc">
-      <li><a href="#why"><span>1</span>Why async?</a></li>
-      <li><a href="#callbacks"><span>2</span>Callbacks</a></li>
-      <li><a href="#callback-hell"><span>3</span>Callback hell</a></li>
-      <li><a href="#promises"><span>4</span>Promises</a></li>
-      <li><a href="#async-await"><span>5</span>Async/await</a></li>
-      <li><a href="#parallel"><span>6</span>Sequential vs parallel</a></li>
-      <li><a href="#combinators"><span>7</span>Promise combinators</a></li>
-      <li><a href="#patterns"><span>8</span>Error handling patterns</a></li>
-      <li><a href="#mistakes"><span>9</span>Common mistakes</a></li>
-      <li><a href="#recap"><span>10</span>Recap and practice</a></li>
+      <li><a href="#why" title="Why async?"><span class="n">1</span><span class="tx">Why async?</span></a></li>
+      <li><a href="#callbacks" title="Callbacks"><span class="n">2</span><span class="tx">Callbacks</span></a></li>
+      <li><a href="#callback-hell" title="Callback hell"><span class="n">3</span><span class="tx">Callback hell</span></a></li>
+      <li><a href="#promises" title="Promises"><span class="n">4</span><span class="tx">Promises</span></a></li>
+      <li><a href="#async-await" title="Async/await"><span class="n">5</span><span class="tx">Async/await</span></a></li>
+      <li><a href="#parallel" title="Sequential vs parallel"><span class="n">6</span><span class="tx">Sequential vs parallel</span></a></li>
+      <li><a href="#combinators" title="Promise combinators"><span class="n">7</span><span class="tx">Promise combinators</span></a></li>
+      <li><a href="#patterns" title="Error handling patterns"><span class="n">8</span><span class="tx">Error handling patterns</span></a></li>
+      <li><a href="#mistakes" title="Common mistakes"><span class="n">9</span><span class="tx">Common mistakes</span></a></li>
+      <li><a href="#recap" title="Recap and practice"><span class="n">10</span><span class="tx">Recap and practice</span></a></li>
     </ol>
   </nav>
   <div class="tools">
     <div class="size-control" role="group" aria-label="Text size">
       <button type="button" data-size="-1" aria-label="Smaller text">A−</button>
       <button type="button" data-size="1" aria-label="Larger text">A+</button>
-      <span>Text size</span>
+      <span class="tx">Text size</span>
     </div>
     <p class="hint" style="margin:0"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> runs the code you are editing. <kbd>Esc</kbd> leaves the editor.</p>
   </div>
@@ -449,13 +490,21 @@ getBook(-1, (error, book) => {
   <div class="example" data-title="The pyramid of doom">
 <script type="text/plain" class="src">
 function getBook(id, callback) {
-  setTimeout(() => callback(null, { id: id, title: "The Async Adventure", authorId: 7 }), 700);
+  setTimeout(() => {
+    callback(null, { id: id, title: "The Async Adventure", authorId: 7 });
+  }, 700);
 }
+
 function getAuthor(authorId, callback) {
-  setTimeout(() => callback(null, { id: authorId, name: "Alice" }), 700);
+  setTimeout(() => {
+    callback(null, { id: authorId, name: "Alice" });
+  }, 700);
 }
+
 function getOtherBooks(authorId, callback) {
-  setTimeout(() => callback(null, ["Promise Land", "Await for It"]), 700);
+  setTimeout(() => {
+    callback(null, ["Promise Land", "Await for It"]);
+  }, 700);
 }
 
 getBook(1, (error, book) => {
@@ -469,7 +518,7 @@ getBook(1, (error, book) => {
     getOtherBooks(author.id, (error, books) => {
       if (error) return console.error(error.message);
       console.log("3. Other books:", books);
-      // Three levels deep, with the error check repeated at every level
+      // Three levels deep, and the error check is repeated each time
     });
   });
 });
@@ -617,7 +666,7 @@ const failed = Promise.reject(new Error("I'm already rejected"));
 ready.then(value => console.log(value));
 failed.catch(error => console.error(error.message));
 
-console.log("This prints first, even though both promises are already settled");
+console.log("This prints first, even though both are already settled");
 </script>
   </div>
 
@@ -807,7 +856,8 @@ main();
 <script type="text/plain" class="src">
 async function getUser(id) {
   try {
-    const response = await fetch(`https://jsonplaceholder.typicode.com/users/${id}`);
+    const url = `https://jsonplaceholder.typicode.com/users/${id}`;
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error(`HTTP error: ${response.status}`);
@@ -1520,7 +1570,7 @@ function getReviews(bookId) {
             <span class="label">${isStatic ? "Code" : "Code (editable)"}</span>
             ${isStatic ? "" : `<button type="button" class="reset" disabled>Reset</button><button type="button" class="run">Run</button>`}
           </div>
-          <div class="editor"><div class="editor-inner"><pre aria-hidden="${isStatic ? "false" : "true"}"><code></code></pre>${isStatic ? "" : `<textarea spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"></textarea>`}</div></div>
+          <div class="editor"><div class="editor-inner"><pre aria-hidden="${isStatic ? "false" : "true"}"><code></code></pre>${isStatic ? "" : `<textarea spellcheck="false" autocapitalize="off" autocomplete="off" ></textarea>`}</div></div>
         </div>
         ${isStatic ? "" : `
         <div class="pane out-pane">
@@ -1613,6 +1663,20 @@ function getReviews(bookId) {
       applySize();
     });
   });
+
+  /* ---------- Collapse / expand the sidebar ---------- */
+  const layout = document.querySelector(".layout");
+  const collapseBtn = document.querySelector(".collapse-btn");
+  const setCollapsed = collapsed => {
+    layout.classList.toggle("collapsed", collapsed);
+    collapseBtn.setAttribute("aria-expanded", String(!collapsed));
+    const label = collapsed ? "Expand sidebar" : "Collapse sidebar";
+    collapseBtn.setAttribute("aria-label", label);
+    collapseBtn.title = label;
+    try { localStorage.setItem("asyncjs-sidebar-collapsed", collapsed ? "1" : "0"); } catch (e) { /* ignore */ }
+  };
+  try { if (localStorage.getItem("asyncjs-sidebar-collapsed") === "1") setCollapsed(true); } catch (e) { /* ignore */ }
+  collapseBtn.addEventListener("click", () => setCollapsed(!layout.classList.contains("collapsed")));
 
   /* ---------- Highlight the current chapter in the menu ---------- */
   const toc = document.querySelector(".toc");
